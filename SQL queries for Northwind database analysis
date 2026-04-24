@@ -1,0 +1,95 @@
+/* Հեղինակ: mari
+Նկարագրություն: SQL հարցումների շարք Northwind բազայի հիման վրա
+*/
+
+-- 1. Ապրանքների և դրանց մատակարարների միացում
+SELECT P.ProductName, S.CompanyName
+FROM Products as P
+INNER JOIN Suppliers as S ON P.SupplierID = S.SupplierID;
+
+-- 2. Ապրանքների և դրանց կատեգորիաների միացում
+SELECT Products.ProductName, Categories.CategoryName
+FROM Products 
+INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID;
+
+-- 3. Պատվերների և համապատասխան հաճախորդների ցուցակ
+SELECT Orders.OrderID, Customers.CompanyName
+FROM Orders
+INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;
+
+-- 4. Պատվերների և դրանք ձևակերպած աշխատակիցների միացում
+SELECT Orders.OrderID, Employees.FirstName, Employees.LastName
+FROM Orders
+INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID;
+
+-- 5. Պատվերների և առաքող ընկերությունների միացում
+SELECT Orders.OrderID, Shippers.CompanyName
+FROM Orders
+INNER JOIN Shippers ON Orders.ShipVia = Shippers.ShipperID;
+
+-- 6. Լոնդոն քաղաք առաքված պատվերների զտում (WHERE)
+SELECT Orders.OrderID, Customers.CompanyName
+FROM Orders
+INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID
+WHERE Orders.ShipCity = 'London';
+
+-- 7. Եռակողմ միացում: Պատվեր + Հաճախորդ + Աշխատակից
+SELECT Orders.OrderID, Customers.CompanyName, Employees.LastName
+FROM Orders
+JOIN Customers ON Orders.CustomerID = Customers.CustomerID
+JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID;
+
+-- 8. Ապրանքների քանակի հաշվարկ ըստ կատեգորիաների (GROUP BY)
+SELECT Categories.CategoryName, COUNT(Products.ProductID) AS ProductCount
+FROM Categories
+JOIN Products ON Categories.CategoryID = Products.CategoryID
+GROUP BY Categories.CategoryName;
+
+-- 9. Վաճառքի գումարի հաշվարկ (Quantity * UnitPrice)
+SELECT Orders.OrderID, Products.ProductName, 
+       [Order Details].Quantity * [Order Details].UnitPrice AS TotalPrice
+FROM [Order Details]
+JOIN Products ON [Order Details].ProductID = Products.ProductID
+JOIN Orders ON [Order Details].OrderID = Orders.OrderID;
+
+-- 10. Բոլոր աշխատակիցները և նրանց պատվերները (LEFT JOIN)
+SELECT Employees.FirstName, Employees.LastName, Orders.OrderID
+FROM Employees
+LEFT JOIN Orders ON Employees.EmployeeID = Orders.EmployeeID;
+
+-- 11. Հաճախորդների ընդհանուր կատարած ծախսերը
+SELECT c.CompanyName, SUM(od.Quantity * od.UnitPrice) AS TotalSpend
+FROM Customers AS c
+JOIN Orders AS o ON c.CustomerID = o.CustomerID
+JOIN [Order Details] AS od ON o.OrderID = od.OrderID
+GROUP BY c.CompanyName;
+
+-- 12. Աշխատակիցների և նրանց մենեջերների կապը (Self-Join)
+SELECT A.FirstName AS Employee, B.FirstName AS Manager
+FROM Employees AS A
+INNER JOIN Employees AS B ON A.ReportsTo = B.EmployeeID;
+
+-- 13. Մատակարարներ, որոնք ունեն 3-ից ավելի ապրանք (HAVING)
+SELECT s.CompanyName, COUNT(p.ProductID) AS CountOfProducts
+FROM Suppliers AS s
+JOIN Products AS p ON s.SupplierID = p.SupplierID
+GROUP BY s.CompanyName
+HAVING COUNT(p.ProductID) > 3;
+
+-- 14. Բոլոր ապրանքները, որոնք պատվիրել է կոնկրետ հաճախորդը
+SELECT DISTINCT p.ProductName
+FROM Customers AS c
+JOIN Orders AS o ON c.CustomerID = o.CustomerID
+JOIN [Order Details] AS od ON o.OrderID = od.OrderID
+JOIN Products AS p ON od.ProductID = p.ProductID
+WHERE c.CompanyName = 'Vinet et Alcool';
+
+-- 15. Աշխատակիցների վաճառած 'Beverages' կատեգորիայի ընդհանուր քանակը
+SELECT e.FirstName + ' ' + e.LastName AS EmployeeName, SUM(od.Quantity) AS TotalQty
+FROM Employees AS e
+JOIN Orders AS o ON e.EmployeeID = o.EmployeeID
+JOIN [Order Details] AS od ON o.OrderID = od.OrderID
+JOIN Products AS p ON od.ProductID = p.ProductID
+JOIN Categories AS c ON p.CategoryID = c.CategoryID
+WHERE c.CategoryName = 'Beverages'
+GROUP BY e.FirstName + ' ' + e.LastName;
