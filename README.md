@@ -1,6 +1,6 @@
 # Northwind SQL Analysis Project
 
-Hi, I'm **maritadevosiian**, an Information Security student. 
+Hi, I'm **Mari Tadevosyan**, an Information Security student. 
 This repository contains a collection of SQL queries developed during my analysis of the Northwind database.
 
 ### Key Skills Demonstrated:
