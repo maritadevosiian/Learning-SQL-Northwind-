@@ -1,95 +1,96 @@
-/* Հեղինակ: mari
-Նկարագրություն: SQL հարցումների շարք Northwind բազայի հիման վրա
+/* Author: Mari
+Description: A comprehensive collection of SQL queries for Northwind database analysis, 
+ranging from basic joins to complex analytical reporting.
 */
 
--- 1. Ապրանքների և դրանց մատակարարների միացում
+-- 1. Get all product names and their corresponding supplier company names
 SELECT P.ProductName, S.CompanyName
-FROM Products as P
-INNER JOIN Suppliers as S ON P.SupplierID = S.SupplierID;
+FROM Products AS P
+INNER JOIN Suppliers AS S ON P.SupplierID = S.SupplierID;
 
--- 2. Ապրանքների և դրանց կատեգորիաների միացում
-SELECT Products.ProductName, Categories.CategoryName
-FROM Products 
-INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID;
+-- 2. List products along with their category names
+SELECT P.ProductName, C.CategoryName
+FROM Products AS P
+INNER JOIN Categories AS C ON P.CategoryID = C.CategoryID;
 
--- 3. Պատվերների և համապատասխան հաճախորդների ցուցակ
-SELECT Orders.OrderID, Customers.CompanyName
-FROM Orders
-INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;
+-- 3. Display Order IDs and the names of the customers who placed them
+SELECT O.OrderID, C.CompanyName
+FROM Orders AS O
+INNER JOIN Customers AS C ON O.CustomerID = C.CustomerID;
 
--- 4. Պատվերների և դրանք ձևակերպած աշխատակիցների միացում
-SELECT Orders.OrderID, Employees.FirstName, Employees.LastName
-FROM Orders
-INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID;
+-- 4. Show Order IDs and the employees who handled each order
+SELECT O.OrderID, E.FirstName, E.LastName
+FROM Orders AS O
+INNER JOIN Employees AS E ON O.EmployeeID = E.EmployeeID;
 
--- 5. Պատվերների և առաքող ընկերությունների միացում
-SELECT Orders.OrderID, Shippers.CompanyName
-FROM Orders
-INNER JOIN Shippers ON Orders.ShipVia = Shippers.ShipperID;
+-- 5. List Order IDs and the shipping companies used for delivery
+SELECT O.OrderID, S.CompanyName
+FROM Orders AS O
+INNER JOIN Shippers AS S ON O.ShipVia = S.ShipperID;
 
--- 6. Լոնդոն քաղաք առաքված պատվերների զտում (WHERE)
-SELECT Orders.OrderID, Customers.CompanyName
-FROM Orders
-INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID
-WHERE Orders.ShipCity = 'London';
+-- 6. Filter orders that were shipped specifically to 'London'
+SELECT O.OrderID, C.CompanyName
+FROM Orders AS O
+INNER JOIN Customers AS C ON O.CustomerID = C.CustomerID
+WHERE O.ShipCity = 'London';
 
--- 7. Եռակողմ միացում: Պատվեր + Հաճախորդ + Աշխատակից
-SELECT Orders.OrderID, Customers.CompanyName, Employees.LastName
-FROM Orders
-JOIN Customers ON Orders.CustomerID = Customers.CustomerID
-JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID;
+-- 7. Triple Join: Retrieve Order ID, Customer Name, and Employee Last Name
+SELECT O.OrderID, C.CompanyName, E.LastName
+FROM Orders AS O
+JOIN Customers AS C ON O.CustomerID = C.CustomerID
+JOIN Employees AS E ON O.EmployeeID = E.EmployeeID;
 
--- 8. Ապրանքների քանակի հաշվարկ ըստ կատեգորիաների (GROUP BY)
-SELECT Categories.CategoryName, COUNT(Products.ProductID) AS ProductCount
-FROM Categories
-JOIN Products ON Categories.CategoryID = Products.CategoryID
-GROUP BY Categories.CategoryName;
+-- 8. Count the number of products in each category (Aggregations)
+SELECT C.CategoryName, COUNT(P.ProductID) AS ProductCount
+FROM Categories AS C
+JOIN Products AS P ON C.CategoryID = P.CategoryID
+GROUP BY C.CategoryName;
 
--- 9. Վաճառքի գումարի հաշվարկ (Quantity * UnitPrice)
-SELECT Orders.OrderID, Products.ProductName, 
-       [Order Details].Quantity * [Order Details].UnitPrice AS TotalPrice
-FROM [Order Details]
-JOIN Products ON [Order Details].ProductID = Products.ProductID
-JOIN Orders ON [Order Details].OrderID = Orders.OrderID;
+-- 9. Calculate the total price for each line item in orders (Quantity * UnitPrice)
+SELECT O.OrderID, P.ProductName, 
+       (OD.Quantity * OD.UnitPrice) AS TotalPrice
+FROM [Order Details] AS OD
+JOIN Products AS P ON OD.ProductID = P.ProductID
+JOIN Orders AS O ON OD.OrderID = O.OrderID;
 
--- 10. Բոլոր աշխատակիցները և նրանց պատվերները (LEFT JOIN)
-SELECT Employees.FirstName, Employees.LastName, Orders.OrderID
-FROM Employees
-LEFT JOIN Orders ON Employees.EmployeeID = Orders.EmployeeID;
+-- 10. List all employees and their orders, including those with no orders (LEFT JOIN)
+SELECT E.FirstName, E.LastName, O.OrderID
+FROM Employees AS E
+LEFT JOIN Orders AS O ON E.EmployeeID = O.EmployeeID;
 
--- 11. Հաճախորդների ընդհանուր կատարած ծախսերը
-SELECT c.CompanyName, SUM(od.Quantity * od.UnitPrice) AS TotalSpend
-FROM Customers AS c
-JOIN Orders AS o ON c.CustomerID = o.CustomerID
-JOIN [Order Details] AS od ON o.OrderID = od.OrderID
-GROUP BY c.CompanyName;
+-- 11. Calculate total spending for each customer (Revenue per Customer)
+SELECT C.CompanyName, SUM(OD.Quantity * OD.UnitPrice) AS TotalSpend
+FROM Customers AS C
+JOIN Orders AS O ON C.CustomerID = O.CustomerID
+JOIN [Order Details] AS OD ON O.OrderID = OD.OrderID
+GROUP BY C.CompanyName;
 
--- 12. Աշխատակիցների և նրանց մենեջերների կապը (Self-Join)
+-- 12. Self-Join: List employees and the names of their direct managers
 SELECT A.FirstName AS Employee, B.FirstName AS Manager
 FROM Employees AS A
 INNER JOIN Employees AS B ON A.ReportsTo = B.EmployeeID;
 
--- 13. Մատակարարներ, որոնք ունեն 3-ից ավելի ապրանք (HAVING)
-SELECT s.CompanyName, COUNT(p.ProductID) AS CountOfProducts
-FROM Suppliers AS s
-JOIN Products AS p ON s.SupplierID = p.SupplierID
-GROUP BY s.CompanyName
-HAVING COUNT(p.ProductID) > 3;
+-- 13. Find suppliers that provide more than 3 different products (HAVING clause)
+SELECT S.CompanyName, COUNT(P.ProductID) AS CountOfProducts
+FROM Suppliers AS S
+JOIN Products AS P ON S.SupplierID = P.SupplierID
+GROUP BY S.CompanyName
+HAVING COUNT(P.ProductID) > 3;
 
--- 14. Բոլոր ապրանքները, որոնք պատվիրել է կոնկրետ հաճախորդը
-SELECT DISTINCT p.ProductName
-FROM Customers AS c
-JOIN Orders AS o ON c.CustomerID = o.CustomerID
-JOIN [Order Details] AS od ON o.OrderID = od.OrderID
-JOIN Products AS p ON od.ProductID = p.ProductID
-WHERE c.CompanyName = 'Vinet et Alcool';
+-- 14. Retrieve all product names ordered by the customer 'Vinet et Alcool'
+SELECT DISTINCT P.ProductName
+FROM Customers AS C
+JOIN Orders AS O ON C.CustomerID = O.CustomerID
+JOIN [Order Details] AS OD ON O.OrderID = OD.OrderID
+JOIN Products AS P ON OD.ProductID = P.ProductID
+WHERE C.CompanyName = 'Vinet et Alcool';
 
--- 15. Աշխատակիցների վաճառած 'Beverages' կատեգորիայի ընդհանուր քանակը
-SELECT e.FirstName + ' ' + e.LastName AS EmployeeName, SUM(od.Quantity) AS TotalQty
-FROM Employees AS e
-JOIN Orders AS o ON e.EmployeeID = o.EmployeeID
-JOIN [Order Details] AS od ON o.OrderID = od.OrderID
-JOIN Products AS p ON od.ProductID = p.ProductID
-JOIN Categories AS c ON p.CategoryID = c.CategoryID
-WHERE c.CategoryName = 'Beverages'
-GROUP BY e.FirstName + ' ' + e.LastName;
+-- 15. Total quantity of 'Beverages' sold by each employee (Multi-table join)
+SELECT E.FirstName + ' ' + E.LastName AS EmployeeName, SUM(OD.Quantity) AS TotalQty
+FROM Employees AS E
+JOIN Orders AS O ON E.EmployeeID = O.EmployeeID
+JOIN [Order Details] AS OD ON O.OrderID = OD.OrderID
+JOIN Products AS P ON OD.ProductID = P.ProductID
+JOIN Categories AS C ON P.CategoryID = C.CategoryID
+WHERE C.CategoryName = 'Beverages'
+GROUP BY E.FirstName + ' ' + E.LastName;
